@@ -16,14 +16,16 @@ Design rules:
 """
 import json, subprocess, sys
 
-SUPPORTED_VERSIONS = ["2025-06-18", "2025-11-25"]
+SUPPORTED_VERSIONS = ["2024-11-05", "2025-06-18", "2025-11-25"]
 SERVER_NAME = "nano-mcp-termux"
 SERVER_VERSION = "1.0.0"
 
 
 def negotiate_version(client_version):
-    """Echo the client's version when we support it; otherwise answer with the
-    highest version we support and let the client decide to downgrade/abort."""
+    """MCP-spec version negotiation: echo the client's requested version when
+    we support it; otherwise answer with the highest version we support and
+    let the client decide to downgrade or abort (per 'Version Negotiation').
+    Legacy clients (2024-11-05) are explicitly supported to avoid rejection."""
     if client_version in SUPPORTED_VERSIONS:
         return client_version
     return SUPPORTED_VERSIONS[-1]

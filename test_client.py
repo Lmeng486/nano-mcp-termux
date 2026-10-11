@@ -58,6 +58,12 @@ resp3, _ = talk([{"jsonrpc": "2.0", "id": 1, "method": "initialize",
 check("unknown version -> highest supported 2025-11-25",
       resp3[0]["result"]["protocolVersion"] == "2025-11-25")
 
+# --- scenario E: legacy client version 2024-11-05 -> echoed back ---
+resp5, _ = talk([{"jsonrpc": "2.0", "id": 1, "method": "initialize",
+                  "params": {"protocolVersion": "2024-11-05"}}])
+check("initialize echoes legacy version 2024-11-05",
+      resp5[0]["result"]["protocolVersion"] == "2024-11-05")
+
 # --- scenario D: protocol errors ---
 resp4, err = talk_raw([
     '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "no_such_tool", "arguments": {}}}',
