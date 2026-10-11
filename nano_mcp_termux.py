@@ -1,121 +1,172 @@
 #!/usr/bin/env python3
-"""nano-mcp-termux: Zero-dependency MCP server for AI agents.
-Natively runs on Termux (Android), Raspberry Pi, and Linux.
-Pure Stdio JSON-RPC, no external dependencies.
-Minimal implementation to pass Glama introspection.
+"""nano-mcp-termux.py — Zero-dependency, single-file MCP server for
+Termux/Android, Raspberry Pi, Linux, and Docker containers.
+
+Implements the minimal MCP protocol surface over stdio:
+  initialize | notifications/initialized (silent) | ping | tools/list | tools/call
+
+Design rules:
+  1. stdout is SACRED: only newline-delimited JSON-RPC frames go to stdout.
+     All logs and errors -> stderr.
+  2. Framing: one complete JSON-RPC message per line (json.dumps + newline),
+     the stdio transport used by the official MCP SDKs. No embedded newlines.
+  3. capabilities declare ONLY {"tools": {}} — minimal promise, max compatibility.
+  4. Graceful degradation: device_status never fails; missing inputs are marked
+     unavailable (battery/sysfs probes simply fall through inside containers).
 """
+import json, subprocess, sys
 
-import json
-import sys
-
-VERSION = "2024-11-05"
+SUPPORTED_VERSIONS = ["2025-06-18", "2025-11-25"]
 SERVER_NAME = "nano-mcp-termux"
 SERVER_VERSION = "1.0.0"
 
 
-def send_response(id, result=None, error=None):
-    """Send JSON-RPC response with proper Content-Length header."""
-    if error:
-        response = {"jsonrpc": "2.0", "id": id, "error": error}
-    else:
-        response = {"jsonrpc": "2.0", "id": id, "result": result}
-    
-    body = json.dumps(response)
-    body_bytes = body.encode('utf-8')
-    content_length = len(body_bytes)
-    
-    # MCP protocol: Content-Length header followed by blank line then body
-    sys.stdout.write(f"Content-Length: {content_length}\n\n")
-    sys.stdout.write(body)
+def negotiate_version(client_version):
+    """Echo the client's version when we support it; otherwise answer with the
+    highest version we support and let the client decide to downgrade/abort."""
+    if client_version in SUPPORTED_VERSIONS:
+        return client_version
+    return SUPPORTED_VERSIONS[-1]
+
+
+def log(msg):
+    sys.stderr.write("[nano-mcp] " + str(msg) + "\n")
+    sys.stderr.flush()
+
+
+def send(obj):
+    """One JSON-RPC message per line — MCP stdio wire format."""
+    sys.stdout.write(json.dumps(obj, ensure_ascii=False) + "\n")
     sys.stdout.flush()
 
 
-def handle_request(message):
-    """Handle a single MCP request."""
-    method = message.get("method", "")
-    rid = message.get("id")
-    params = message.get("params", {})
-    
+def run(cmd, timeout=5):
+    """Run a shell command; return stdout string or None on failure."""
+    try:
+        return subprocess.run(cmd, shell=True, capture_output=True, text=True,
+                              timeout=timeout).stdout.strip()
+    except Exception as e:
+        log("run failed: " + cmd + " -> " + repr(e))
+        return None
+
+
+# ---------------------------------------------------------------- tools impl
+
+def tool_device_status(_args):
+    out = {"battery": None, "storage": None, "arch": None, "memory": None}
+
+    # battery: termux-api -> sysfs capacity -> sysfs uevent -> unavailable
+    raw = run("termux-battery-status")
+    if raw:
+        try:
+            b = json.loads(raw)
+            out["battery"] = {"percent": b.get("percentage"), "source": "termux-api"}
+        except Exception:
+            pass
+    if out["battery"] is None:
+        # ladder: sysfs capacity -> sysfs uevent (POWER_SUPPLY_CAPACITY=NN) -> unavailable
+        cap = run("cat /sys/class/power_supply/battery/capacity")
+        if cap and cap.isdigit():
+            out["battery"] = {"percent": int(cap), "source": "sysfs"}
+        else:
+            ue = run("cat /sys/class/power_supply/battery/uevent") or ""
+            for kv in ue.splitlines():
+                if kv.startswith("POWER_SUPPLY_CAPACITY="):
+                    out["battery"] = {"percent": int(kv.split("=", 1)[1]),
+                                      "source": "sysfs-uevent"}
+                    break
+            else:
+                out["battery"] = {"source": "unavailable"}
+
+    # storage: df /data
+    df = run("df -h /data")
+    if df:
+        out["storage"] = {"source": "df", "raw": df}
+
+    # arch
+    arch = run("uname -m")
+    out["arch"] = arch if arch else "unavailable"
+
+    # memory: free -m -> /proc/meminfo
+    mem = run("free -m | grep Mem")
+    if mem:
+        out["memory"] = {"source": "free", "raw": mem}
+    else:
+        mi = run("head -3 /proc/meminfo")
+        out["memory"] = {"source": "procfs", "raw": mi} if mi else {"source": "unavailable"}
+
+    return out
+
+
+TOOLS = {
+    "device_status": {
+        "name": "device_status",
+        "description": "Aggregate device info: battery/storage/arch/memory. Never fails; degraded fields marked unavailable.",
+        "inputSchema": {"type": "object", "properties": {}, "required": []},
+    },
+}
+
+
+def handle(req):
+    method = req.get("method", "")
+    rid = req.get("id")
+
     if method == "initialize":
-        return {
-            "protocolVersion": VERSION,
+        client_ver = req.get("params", {}).get("protocolVersion")
+        return {"jsonrpc": "2.0", "id": rid, "result": {
+            "protocolVersion": negotiate_version(client_ver),
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": SERVER_NAME, "version": SERVER_VERSION}
-        }
-    
+            "serverInfo": {"name": SERVER_NAME, "version": SERVER_VERSION},
+        }}
     if method == "notifications/initialized":
-        return None  # Silently ignore
-    
+        return None  # silent, no response for notifications
     if method == "ping":
-        return {}
-    
+        return {"jsonrpc": "2.0", "id": rid, "result": {}}
     if method == "tools/list":
-        return {
-            "tools": [
-                {
-                    "name": "device_status",
-                    "description": "Check device status; returns placeholder in containers.",
-                    "inputSchema": {"type": "object", "properties": {}}
-                }
-            ]
-        }
-    
+        return {"jsonrpc": "2.0", "id": rid, "result": {"tools": list(TOOLS.values())}}
     if method == "tools/call":
-        name = params.get("name", "")
-        args = params.get("arguments", {}) or {}
-        if name == "device_status":
-            # Return a valid but degraded response (no running commands)
-            return {
-                "battery": None,
-                "storage": None,
-                "arch": "linux",
-                "memory": None
-            }
-    
-    # Unknown method
-    return {"code": -32601, "message": f"Method not found: {method}"}
+        name = req.get("params", {}).get("name", "")
+        args = req.get("params", {}).get("arguments", {}) or {}
+        if name not in TOOLS:
+            return {"jsonrpc": "2.0", "id": rid, "error": {
+                "code": -32602, "message": "Unknown tool: " + name}}
+        try:
+            data = tool_device_status(args) if name == "device_status" else {}
+        except Exception as e:  # degrade, never crash the tool call
+            log("tool error: " + repr(e))
+            data = {"error": "internal", "detail": str(e)}
+        return {"jsonrpc": "2.0", "id": rid, "result": {
+            "content": [{"type": "text", "text": json.dumps(data, ensure_ascii=False)}]}}
+
+    return {"jsonrpc": "2.0", "id": rid, "error": {"code": -32601,
+            "message": "Method not found: " + method}}
 
 
 def main():
-    initialized = False
-    
+    log("nano-mcp-termux starting (supported: " + ", ".join(SUPPORTED_VERSIONS) + ")")
     for line in sys.stdin:
         line = line.strip()
         if not line:
             continue
-        
         try:
-            message = json.loads(line)
-        except json.JSONDecodeError as e:
-            send_response(None, error={"code": -32700, "message": f"Parse error: {str(e)}"})
-            continue
-        
-        rid = message.get("id")
-        if rid is None:
-            continue  # Skip notifications (no ID)
-        
-        method = message.get("method")
-        
-        # Only process initialize if not initialized
-        if not initialized and method != "initialize":
-            continue
-        
-        if method == "initialize":
-            initialized = True
-        
-        try:
-            result = handle_request(message)
-            if result is None:
-                continue
-            # For errors, send_response expects the error object directly
-            send_response(rid, result if "error" not in result else result)
+            req = json.loads(line)
         except Exception as e:
-            send_response(rid, error={"code": -32603, "message": f"Internal error: {str(e)}"})
+            send({"jsonrpc": "2.0", "id": None, "error": {
+                "code": -32700, "message": "Parse error: " + str(e)}})
+            continue
+        try:
+            resp = handle(req)
+            if resp is not None:
+                send(resp)
+        except Exception as e:
+            log("UNCAUGHT: " + repr(e))
+            send({"jsonrpc": "2.0", "id": req.get("id"), "error": {
+                "code": -32603, "message": "Internal error: " + str(e)}})
 
 
 if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        sys.stderr.write(f"FATAL: {e}\n")
+        log("FATAL: " + repr(e))
         sys.exit(1)
