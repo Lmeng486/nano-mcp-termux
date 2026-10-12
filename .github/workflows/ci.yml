@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test py${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Syntax check
+        run: python -m py_compile nano_mcp_termux.py
+
+      - name: Protocol / tool / lifecycle suite
+        run: python3 test_client.py
+
+      - name: Orphan-leak regression (1.0.0 vs 1.1.0)
+        run: python3 test_lifecycle_orphan.py
+
+  docker:
+    name: docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t nano-mcp-termux:ci .
+
+      - name: Smoke test (--health)
+        run: docker run --rm nano-mcp-termux:ci python3 nano_mcp_termux.py --health
