@@ -8,6 +8,7 @@
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-green)
 ![Version](https://img.shields.io/badge/version-1.1.0-orange)
 ![Tests](https://img.shields.io/badge/tests-32%20%2B%20orphan--A%2FB-brightgreen)
+[![CI](https://github.com/Lmeng486/nano-mcp-termux/actions/workflows/ci.yml/badge.svg)](https://github.com/Lmeng486/nano-mcp-termux/actions/workflows/ci.yml)
 ![Zero Dependencies](https://img.shields.io/badge/dependencies-0-success)
 
 ## 🚀 Quick Start
