@@ -1,0 +1,50 @@
+name: Bug report
+description: Report a crash, protocol mismatch, or process/lifecycle issue.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a report. Please fill in as much as you can.
+        For security issues, do **not** open a public issue — see SECURITY.md instead.
+  - type: input
+    id: version
+    attributes:
+      label: Version / commit
+      description: Output of `python3 nano_mcp_termux.py --health`, or the commit SHA.
+      placeholder: "1.1.0 / 2cdecca"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Termux / Android
+        - Raspberry Pi
+        - Linux
+        - Docker
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Include the exact command and the observed output.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stack trace
+      render: shell
+    validations:
+      required: false
