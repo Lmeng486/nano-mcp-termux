@@ -555,30 +555,89 @@ def tool_path_adapter(_args):
 
 # ------------------------------------------------------------------- catalog
 
+# Every tool in this server is a pure observer: it reads local system state,
+# never writes files, never mutates device state, and never opens a network
+# connection. Declaring the MCP annotation hints explicitly (instead of relying
+# on the spec defaults, which assume the opposite) lets clients auto-approve
+# these calls and lets directory introspection score them accurately.
+_READ_ONLY = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": False,
+}
+
 TOOLS = {
     "device_status": {
         "name": "device_status",
-        "description": "Aggregate device info: battery/storage/arch/memory. Never fails; degraded fields marked unavailable.",
+        "title": "Device status (read-only)",
+        "description": (
+            "Read-only snapshot of the host device: battery level, storage usage, "
+            "CPU architecture and memory. Call it first when you need to know what "
+            "hardware or runtime you are on, or to check whether battery/storage is "
+            "low before starting a long task. Safe to call repeatedly and in "
+            "parallel. Side effects: none — it only reads local system interfaces, "
+            "never writes and never touches the network. It never raises: any field "
+            "that cannot be read comes back with source \"unavailable\" instead of "
+            "failing the call. Returns {battery, storage, arch, memory}."
+        ),
         "inputSchema": {"type": "object", "properties": {}, "required": []},
+        "annotations": _READ_ONLY,
     },
     "server_health": {
         "name": "server_health",
-        "description": "MCP server self-diagnostics: pid/ppid, uptime, request counters, tracked child processes, RSS, and the Android Phantom Process Killer risk assessment.",
+        "title": "Server health (read-only)",
+        "description": (
+            "Read-only self-diagnostics for this MCP server process: pid/ppid, "
+            "runtime class, uptime, request and tool-call counters, tracked live "
+            "child processes, RSS, and the Android Phantom Process Killer risk "
+            "assessment. Use it to verify the server is alive, to debug client-side "
+            "disconnects, or to check whether orphaned children are accumulating on "
+            "Android. Side effects: none — it never spawns long-lived work and never "
+            "modifies state. Returns {server, children, memory, phantom_process}."
+        ),
         "inputSchema": {"type": "object", "properties": {}, "required": []},
+        "annotations": _READ_ONLY,
     },
     "resolve_path": {
         "name": "resolve_path",
-        "description": "Resolve a filesystem path for the current runtime: expands ~/$HOME/$PREFIX/$TMPDIR, follows symlinks, finds the backing mount, lists Android-equivalent spellings (/sdcard <-> /storage/emulated/0 <-> $HOME/storage/shared), and warns about noexec mounts, case-insensitivity and shell-quoting hazards.",
+        "title": "Resolve filesystem path (read-only)",
+        "description": (
+            "Resolve and validate one filesystem path in the runtime this server "
+            "runs in: expands ~/$HOME/$PREFIX/$TMPDIR, follows symlinks, reports the "
+            "mount actually backing the path, and lists every Android-equivalent "
+            "spelling (/sdcard <-> /storage/emulated/0 <-> $HOME/storage/shared). "
+            "Call it before handing a path to a shell command or to another tool, "
+            "especially on Termux/PRoot where one file has several spellings. Skip it "
+            "for paths already known-good inside a plain Linux runtime. Read-only: it "
+            "stats the path but never reads or writes file contents. Requires a "
+            "non-empty `path`; an empty or missing value returns {error} rather than "
+            "raising. Returns {input, expanded, resolved, env, exists, is_dir, "
+            "is_file, is_symlink, readable, writable, executable, mount, "
+            "alternatives, warnings}."
+        ),
         "inputSchema": {
             "type": "object",
-            "properties": {"path": {"type": "string", "description": "Path to resolve (may contain ~, $HOME, $PREFIX, $TMPDIR)"}},
+            "properties": {"path": {"type": "string", "description": "Path to resolve. May be absolute or relative and may contain ~, $HOME, $PREFIX or $TMPDIR. Required and non-empty; an empty string returns an error object instead of raising."}},
             "required": ["path"],
         },
+        "annotations": _READ_ONLY,
     },
     "path_adapter": {
         "name": "path_adapter",
-        "description": "Report the current runtime's path environment: detected env (termux/proot/android/linux), HOME/PREFIX/TMPDIR, Android shared-storage roots with their real mounts, and all noexec mounts that block script execution.",
+        "title": "Path environment adapter (read-only)",
+        "description": (
+            "Report the runtime's path environment so you can translate host paths "
+            "correctly: detected env class (termux/proot/android/linux), "
+            "HOME/PREFIX/TMPDIR, each Android shared-storage root with its real mount, "
+            "all noexec mounts that block in-place script execution, and "
+            "runtime-specific notes. Call it once when starting work on an unfamiliar "
+            "device, before constructing paths for other tools. Takes no arguments. "
+            "Side effects: none; read-only and idempotent. Returns {env, home, "
+            "prefix, tmpdir, python, platform, android_roots, noexec_mounts, notes}."
+        ),
         "inputSchema": {"type": "object", "properties": {}, "required": []},
+        "annotations": _READ_ONLY,
     },
 }
 

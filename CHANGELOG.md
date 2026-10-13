@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- MCP tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`,
+  `openWorldHint`) on all four tools, plus a human-readable `title` for each.
+  Every tool in this server is a pure observer, so the hints are declared
+  explicitly instead of relying on spec defaults.
+
+### Changed
+
+- Tool descriptions rewritten to state purpose, when to call, when to skip,
+  side effects and return shape, so directory introspection and model
+  tool-selection have unambiguous input.
+
 ## [1.1.0] - 2026-10-12
 
 ### Added
