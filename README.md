@@ -104,6 +104,7 @@ python3 test_lifecycle_orphan.py  # orphan-leak A/B regression (1.0.0 vs 1.1.0)
 
 - **Original repository**: [Lmeng486/nano-mcp-termux](https://github.com/Lmeng486/nano-mcp-termux)
 - **Verification report**: [awesome-termux-mcp](https://github.com/Lmeng486/awesome-termux-mcp)
+- **Measured overhead report** (this server as subject under test, all numbers from a real device): [MCP on Mobile: Measured Overhead Report](https://github.com/Lmeng486/awesome-termux-mcp/blob/main/docs/MCP-ON-MOBILE-OVERHEAD.md)
 
 ---
 
