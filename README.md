@@ -30,6 +30,84 @@ docker run -i --rm nano-mcp-termux
 python3 nano_mcp_termux.py --health
 ```
 
+## 🔌 Connect to your MCP client
+
+This server **does not run standalone** — it's a *sidecar* that your AI client connects to via the MCP protocol.  
+Below are the three most common ways to mount it.
+
+### Option 1 — Zero‑install (`uvx`), best for desktop AI clients
+```bash
+uvx nano-mcp-termux
+```
+Then add this JSON to your AI client's `mcpServers` config (see client‑specific notes below):
+```json
+{
+  "mcpServers": {
+    "nano-mcp-termux": {
+      "command": "uvx",
+      "args": ["nano-mcp-termux"]
+    }
+  }
+}
+```
+
+### Option 2 — Already `pip install`ed, or you prefer a direct Python launch
+```bash
+pip install nano-mcp-termux
+```
+Config snippet for your AI client:
+```json
+{
+  "mcpServers": {
+    "nano-mcp-termux": {
+      "command": "nano-mcp-termux"
+    }
+  }
+}
+```
+
+### Option 3 — Run the single file directly (e.g. inside Termux on Android)
+```bash
+# Clone or download the repo, then:
+cd /path/to/nano-mcp-termux
+python3 nano_mcp_termux.py
+```
+Config snippet for your AI client:
+```json
+{
+  "mcpServers": {
+    "nano-mcp-termux": {
+      "command": "python3",
+      "args": ["/full/path/to/nano_mcp_termux.py"]
+    }
+  }
+}
+```
+
+---
+
+### How to use these snippets: client‑specific config files
+
+| AI client | Config file location (examples) | Note |
+|-----------|--------------------------------|------|
+| **Claude Desktop** | macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`<br>Windows: `%APPDATA%\Claude\claude_desktop_config.json` | ∆ `mcpServers` key at top level |
+| **Cursor** | `~/.cursor/mcp.json` | ∆ `mcpServers` key at top level |
+| **Cline** | `$HOME/.cliner/mcp.json` (or inside project folder as `cline_mcp_settings.json`) | ∆ `mcpServers` key at top level |
+| **Cherry Studio** | GUI → MCP section (typically auto‑creates `~/.cherrystudio/mcp/*.json`) | JSON schema as above |
+| **Operit** | `~/.operit/mcp_config.json` (or per‑workspace config in the workspace folder) | ∆ `mcpServers` key at top level |
+
+*Tip:* after editing the config file, **restart** your AI client so the new server is detected. If the client supports hot‑reload, you may not need a restart.
+
+### Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| Client shows "server not found" | `command` path is wrong or not in `PATH` | Use absolute path (`/usr/local/bin/nano-mcp-termux` for pip installs, `$HOME/.local/bin/nano-mcp-termux` for `pip --user`) |
+| `Error: spawn uvx ENOENT` | `uvx` not in PATH (not installed) | Use a custom shell like `"shell": "uw uvx"` or the direct Python launch (`Option 2`) |
+| "Connection lost" / process dies immediately | No stdin from client | This server is stdio‑bound; don't run it directly like `nano-mcp-termux` — always launch it through your client's MCP config |
+
+---
+
 ## 🛠️ Features
 
 - ✅ **Zero-dependency**: No external packages required
