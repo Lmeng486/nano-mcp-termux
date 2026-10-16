@@ -37,7 +37,7 @@ import time
 
 SUPPORTED_VERSIONS = ["2024-11-05", "2025-06-18", "2025-11-25"]
 SERVER_NAME = "nano-mcp-termux"
-SERVER_VERSION = "1.1.0"
+SERVER_VERSION = "1.1.1"
 
 
 # --------------------------------------------------------------- primitives

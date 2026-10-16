@@ -5,20 +5,14 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-### Added
-
-- MCP tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`,
-  `openWorldHint`) on all four tools, plus a human-readable `title` for each.
-  Every tool in this server is a pure observer, so the hints are declared
-  explicitly instead of relying on spec defaults.
+## [1.1.1] - 2026-10-16
 
 ### Changed
 
-- Tool descriptions rewritten to state purpose, when to call, when to skip,
-  side effects and return shape, so directory introspection and model
-  tool-selection have unambiguous input.
+- README now carries the `mcp-name` ownership marker so the MCP Registry can
+  verify that the PyPI distribution belongs to the
+  `io.github.Lmeng486/nano-mcp-termux` server entry.
+- Version bumped so the registry-verifiable README actually ships on PyPI.
 
 ## [1.1.0] - 2026-10-12
 

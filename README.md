@@ -1,12 +1,12 @@
 # nano-mcp-termux
-
+<!-- mcp-name: io.github.Lmeng486/nano-mcp-termux -->
 > Zero-dependency, single-file MCP server for AI agents, natively running on Termux (Android), Raspberry Pi, and Linux.
 
 ![GitHub Repository](https://img.shields.io/badge/Repo-green)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 ![MCP Version](https://img.shields.io/badge/MCP-2025--11--25-blue)
 ![Docker Ready](https://img.shields.io/badge/Docker-Ready-green)
-![Version](https://img.shields.io/badge/version-1.1.0-orange)
+![Version](https://img.shields.io/badge/version-1.1.1-orange)
 ![Tests](https://img.shields.io/badge/tests-32%20%2B%20orphan--A%2FB-brightgreen)
 [![CI](https://github.com/Lmeng486/nano-mcp-termux/actions/workflows/ci.yml/badge.svg)](https://github.com/Lmeng486/nano-mcp-termux/actions/workflows/ci.yml)
 ![Zero Dependencies](https://img.shields.io/badge/dependencies-0-success)
