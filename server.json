@@ -1,0 +1,22 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.Lmeng486/nano-mcp-termux",
+  "description": "Zero-dependency single-file MCP server for Termux/Android, Raspberry Pi and Linux",
+  "version": "1.1.1",
+  "repository": {
+    "url": "https://github.com/Lmeng486/nano-mcp-termux",
+    "source": "github"
+  },
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "nano-mcp-termux",
+      "version": "1.1.1",
+      "registryBaseUrl": "https://pypi.org",
+      "runtimeHint": "uvx",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
