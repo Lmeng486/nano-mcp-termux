@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nano-mcp-termux"
+version = "1.1.1"
+description = "Zero-dependency, single-file MCP server for Termux/Android, Raspberry Pi, and Linux"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { file = "LICENSE" }
+authors = [{ name = "Lmeng486" }]
+keywords = ["mcp", "model-context-protocol", "termux", "android", "raspberry-pi", "ai-agent"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Android",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/Lmeng486/nano-mcp-termux"
+Repository = "https://github.com/Lmeng486/nano-mcp-termux"
+Issues = "https://github.com/Lmeng486/nano-mcp-termux/issues"
+Changelog = "https://github.com/Lmeng486/nano-mcp-termux/blob/main/CHANGELOG.md"
+
+[project.scripts]
+nano-mcp-termux = "nano_mcp_termux:main"
+
+[tool.setuptools]
+py-modules = ["nano_mcp_termux"]
