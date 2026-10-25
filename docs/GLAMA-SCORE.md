@@ -43,11 +43,21 @@
 - 唯一 **3 分**：`resolve_path` 的 Parameter Semantics。
 - 唯一两项 4.3 以下维度集中在 `server_health` 的 Behavioral Transparency / Conciseness / Contextual Completeness（均 4 分）。
 
-**TDQS 聚合口径**：60% 均值 + 40% 最小值。
-均值 ≈ 4.375，最小值 4.3 → 聚合 4.1（四舍五入到一位）。
+**聚合口径（2026-10-25 修正，旧记载有误）**：
+页面内嵌 RSC 数据流实测值为 `coherenceScore = 3.5`、`overallScore = 4.1`，四工具 TDQS = 4.4 / 4.4 / 4.4 / 4.3（均值 4.375）。
 
-**TDQS 权重**：purpose clarity 25% / usage guidelines 20% / behavioral transparency 20% / parameter semantics 15% / conciseness 10% / contextual completeness 10%。
-**总分构成**：TDQS 占 70%，Server Coherence 占 30%。
+| 公式 | 计算 | 结果 | 与页面 4.1 比对 |
+|---|---|---|---|
+| ~~60% 均值 + 40% 最小值~~（旧记载） | 0.6×4.375 + 0.4×4.3 | 4.345 → **4.3** | ❌ 不符，已废弃 |
+| **70% TDQS + 30% Coherence**（修正后） | 0.7×4.375 + 0.3×3.5 | 4.1125 → **4.1** | ✅ 完全吻合 |
+
+**总分构成（实测确认）**：TDQS 占 **70%**，Server Coherence 占 **30%**。
+
+- 反解校验：设 `score = w × meanTdqs + (1−w) × coherenceScore`，能四舍五入到 4.1 的 w 区间为 `[0.629, 0.743]`；70% 落在区间内且为整数权重，故判定为 70:30。
+- 数据源说明：`meanTdqs` / `minTdqs` 仅作为**字段名**出现在序列化流中，页面未渲染其数值；故以已渲染的 `coherenceScore` 与 `overallScore` 作为反推锚点。
+- 影响：任何提分预估必须按 70:30 加权计算，**不得再使用旧公式**。
+
+**TDQS 六维度权重**：purpose clarity 25% / usage guidelines 20% / behavioral transparency 20% / parameter semantics 15% / conciseness 10% / contextual completeness 10%。
 
 ### 2.2 Server Coherence 四维度
 
@@ -382,3 +392,4 @@ children, memory, phantom_process}.
 |---|---|---|
 | 2026-10-25 | — | 首次核验并建档。快照对应 TDQS 4.1 / 4 工具 / `HEAD 46cbb5e` |
 | 2026-10-25 | — | 工具描述改写（兄弟工具路由 + 格式示例），四段描述基线同步更新；仅改 description，schema/行为未变 |
+| 2026-10-25 | — | **修正 TDQS 聚合口径**：旧记载 60:40 与页面实测不符，按反解改为 70% TDQS + 30% Coherence（0.7×4.375+0.3×3.5=4.1125→4.1）；同时消除原文第 50 行 70:30 与第 46 行 60:40 并存的内部矛盾 |
