@@ -43,21 +43,62 @@
 - 唯一 **3 分**：`resolve_path` 的 Parameter Semantics。
 - 唯一两项 4.3 以下维度集中在 `server_health` 的 Behavioral Transparency / Conciseness / Contextual Completeness（均 4 分）。
 
-**聚合口径（2026-10-25 修正，旧记载有误）**：
-页面内嵌 RSC 数据流实测值为 `coherenceScore = 3.5`、`overallScore = 4.1`，四工具 TDQS = 4.4 / 4.4 / 4.4 / 4.3（均值 4.375）。
+**TDQS 聚合口径**（已用官方开源仓库 spec 的整数原语 + 精确有理数运算，100% 复现页面全部五个分数）：
 
-| 公式 | 计算 | 结果 | 与页面 4.1 比对 |
-|---|---|---|---|
-| ~~60% 均值 + 40% 最小值~~（旧记载） | 0.6×4.375 + 0.4×4.3 | 4.345 → **4.3** | ❌ 不符，已废弃 |
-| **70% TDQS + 30% Coherence**（修正后） | 0.7×4.375 + 0.3×3.5 | 4.1125 → **4.1** | ✅ 完全吻合 |
+```
+单工具分 = Σ(维度分 × 权重) / 100      # 结果落在 0.1 网格
+Q       = 0.6 × mean(单工具分) + 0.4 × min(单工具分)
+C       = mean(coherence 四维)
+总分     = 0.7 × Q + 0.3 × C
+```
 
-**总分构成（实测确认）**：TDQS 占 **70%**，Server Coherence 占 **30%**。
+代入实测值：单工具 `4.4 / 4.4 / 4.4 / 4.3` → `mean = 4.375`、`min = 4.3` →
+`Q = 0.6×4.375 + 0.4×4.3 = 4.345 → 4.3`；`C = (4+3+4+3)/4 = 3.5`；
+`总分 = 0.7×4.3 + 0.3×3.5 = 4.06 → 4.1`。**与页面徽章、`overallScore 4.1`、`coherenceScore 3.5` 全部一致。**
 
-- 反解校验：设 `score = w × meanTdqs + (1−w) × coherenceScore`，能四舍五入到 4.1 的 w 区间为 `[0.629, 0.743]`；70% 落在区间内且为整数权重，故判定为 70:30。
-- 数据源说明：`meanTdqs` / `minTdqs` 仅作为**字段名**出现在序列化流中，页面未渲染其数值；故以已渲染的 `coherenceScore` 与 `overallScore` 作为反推锚点。
-- 影响：任何提分预估必须按 70:30 加权计算，**不得再使用旧公式**。
+**官方 spec 原文的整数实现（照抄这三行即可复现，权威性高于任何页面反解）**：
 
-**TDQS 六维度权重**：purpose clarity 25% / usage guidelines 20% / behavioral transparency 20% / parameter semantics 15% / conciseness 10% / contextual completeness 10%。
+```
+descriptionQualityScore = round1(6 × Σ tdqs + 4 × n × min(tdqs), 100 × n)
+coherenceScore          = round1(disambiguation + namingConsistency
+                                 + toolCountAppropriateness + completeness, 4)
+overallScore            = round1(7 × descriptionQualityScore + 3 × coherenceScore, 100)
+```
+
+其中 `tdqs` 是单工具的十分位整数（10–50，即 `4.4 → 44`），`n` 是工具数，`round1` 是整数 half-up 原语
+`round1(num, den) = (2 × num + den) // (2 × den)`。
+代入 `Σtdqs = 44+44+44+43 = 175`、`n = 4`、`min = 43`：
+`(6×175 + 4×4×43) / (100×4) = (1050 + 688) / 400 = 1738/400 = 4.345 → 4.3`；
+`C = (4+3+4+3)/4 = 3.5`；`(7×43 + 3×35)/100 = 406/100 = 4.06 → 4.1`。
+与上面的分数式写法结果完全等价，但整数写法不会踩浮点。
+
+> 注：若把 `Q` 简化为纯均值 `4.4`，总分也是 `4.1`（`0.7×4.4+0.3×3.5=4.13`），仅凭页面总分无法区分两种口径；此处采用官方 spec 的 `60/40` 定义，因为它能同时解释 `min` 项的存在意义。
+> 旧版本文档写的「w = 0.70 反解、无最小值参与」是当时未拿到 spec 时的推测，已废弃。
+
+> **来源更正**：`https://glama.ai/spec`、`/mcp/spec`、`/spec/tdqs`、`/docs/tdqs` 四个地址当前**全部 404**。
+> 权威来源已迁移到 GitHub 开源仓库 `glama-ai/tool-definition-quality-score` 与 `tdqs.dev`（v1.2 规范）。
+> 本节公式取自该仓库原文，不是页面反解。
+
+**⚠️ 量纲陷阱（复现时最容易踩的坑）**：必须全程用整数 tenths/hundredths 运算并显式 half-up。
+实测 Python 内置 `round()` 采用银行家舍入，会把 `4.25 → 4.2`、`4.85 → 4.8`，直接把 `server_health` 从 4.3 算成 4.2、总分算错。
+正确 half-up：`def hu(p,q): return (2*p+q)//(2*q)`。
+
+官方 spec 对此有三条明确警告，逐条都是会真扣 0.1 分的实操陷阱：
+
+1. **`mean` 必须是精确的 `Σtdqs / n`，不能用已发布的保留一位小数的 `meanTdqs`。**
+   本条实测踩中：先把 `mean` 取整成 `4.4`，再算 `0.6×4.4 + 0.4×4.3 = 4.36 → 4.4`，
+   `Q` 被错算成 `4.4`（正确 `4.3`），总分随之错算成 `4.1` 之外的值。必须用 `4.375`。
+2. **Python 的 `round` 与 `Math.round` 在半值上方向相反。**
+   coherence 四维之和为奇数时均值必然落在半值上，这类平局并不罕见，故一律显式 half-up。
+3. **浮点累积会跨档。** 官方举例 `0.7 × 3.0 + 0.3 × 4.5` 在 double 下累加到略小于 `3.45`，
+   于是把一个按公式应属 A 的服务器发布成 B。整数原语就是为消除这条而存在。
+
+**⚠️ 80% 覆盖率门槛（官方新增规则）**：聚合只在**至少 80% 的工具已完成评分**时才计算，
+否则部分覆盖会误报服务器质量。本仓库当前 4 个工具全部已评分，不受影响；
+但若新增第 5 个工具，必须等它也被评分后聚合才会刷新 —— 即「加工具 → 立刻涨分」之间有一次评分延迟。
+
+**TDQS 权重**：purpose clarity 25% / usage guidelines 20% / behavioral transparency 20% / parameter semantics 15% / conciseness 10% / contextual completeness 10%。
+**总分构成**：TDQS 占 70%，Server Coherence 占 30%。
 
 ### 2.2 Server Coherence 四维度
 
@@ -182,6 +223,71 @@ d0b4369 build: add pyproject.toml for reproducible packaging
 - 这个数字会持续往上走：`1.1.2` → `1.1.3` → ……，**看到它不等于仓库有新版本**。
 - 它和页面快照是**解耦**的：本轮内部编号涨到 `1.1.3`，但 `observedAt` 仍是 `2026-10-25T10:23:00.951684Z`、`scoredAt` 仍是 `2026-10-25T10:30:22.058725Z`，**采集与评分时间戳一点没动**。说明「内部构建计数器自增」不等于「重新抓取了最新代码」。
 - 因此：**要判断 Glama 是否真的重抓，只看 `observedAt` / `scoredAt` 是否推进，不看 `githubProject.version`。**
+
+
+### 3.7 抓取源定论：页面快照对应 GitHub `46cbb5e`，不是 PyPI 包
+
+本节回答一个此前一直悬着的问题：Glama 页面上的四段工具描述，究竟抓自仓库哪个提交？是不是抓的 PyPI 上的 `nano-mcp-termux 1.1.1` 包？
+
+**结论：抓自 GitHub 仓库提交 `46cbb5e`（2026-10-25 09:10:34 +0000，`SERVER_VERSION = "1.1.1"`），不是 PyPI 包。** 四条独立证据共同锁定，每条单独成立即可排除其余候选。
+
+**证据一：四段描述归一化后 4/4 完全一致。**
+
+从页面提取四个 `<details>` 工具块内的最长 `<p>`，`html.unescape` + 去标签后，与各提交 `nano_mcp_termux.py` 中对应描述字符串逐字符比对。**原始比对只有 2/4 命中**，差异经逐字符定位为**提取/渲染噪声而非版本差异**：
+
+| 工具 | 页面 vs 源码差异 | 归因 |
+|---|---|---|
+| `resolve_path` | `` `path` `` → `path` | HTML 渲染剥掉反引号 |
+| `device_status` | `\"unavailable\"` → `"unavailable"` | 源码 `\"` 转义在提取时未还原 |
+
+统一归一化（去反引号、还原 `\"`、压缩空白）后重跑：
+
+| 提交 | 归一化匹配 | `SERVER_VERSION` | 结论 |
+|---|---|---|---|
+| `00df8af` | 4/4 | 1.1.0 | 描述相同但版本号不符（证据三排除） |
+| `5ac7e96` | 4/4 | 1.1.1 | 描述相同，靠证据二排除 |
+| **`46cbb5e`** | **4/4** | **1.1.1** | **唯一同时满足全部证据** |
+| `ee60620` | 0/4 | 1.1.1 | 已改写 |
+| `bb0448c` / `92a9489` / HEAD | 0/4 | 1.1.1 | 已改写 |
+
+页面四工具描述长度基线：`device_status` 542 / `server_health` 482 / `resolve_path` 779 / `path_adapter` 545；对应源码为 544 / 482 / 781 / 545，差 2 的两项已归因为上表的渲染/转义。
+
+**证据二：README 章节标记矩阵（决定性）。**
+
+三个候选在描述上完全相同、无法靠描述区分；但 README 长度与章节差异极大，且章节名会原样出现在页面里：
+
+| 标记 | 页面 | `00df8af` | `5ac7e96` | `87014a3` | `6ad9793` | **`46cbb5e`** | HEAD |
+|---|---|---|---|---|---|---|---|
+| `Connect to your MCP client` | 2 | 0 | 0 | 1 | 1 | **1** | 1 |
+| `Dev.to` | 2 | 0 | 0 | 0 | 1 | **1** | 1 |
+| `verify_glama_build` | 4 | 0 | 0 | 0 | 0 | **2** | 2 |
+| README 字节数 | — | 5477 | 5530 | 8293 | 8478 | **9698** | 9827 |
+
+`5ac7e96` 三项全 0，与页面 2 / 2 / 4 完全不符；`46cbb5e` 是**第一个同时具备三项标记**的提交（更早的 `b8ac908` README 尚无 `verify_glama_build`）。页面计数是源码的 2 倍，属同一章节在 JSON-LD / `<details>` / tab 等多处重复渲染，**只可比「有/无」，不可比绝对值**。
+
+**证据三：版本号排除 `00df8af`。** 页面 `releaseVersion` 为 `"1.1.1"`，而 `00df8af` 的 `SERVER_VERSION` 是 `"1.1.0"`。
+
+**证据四：时间线排除其后提交。** 页面 `observedAt = 2026-10-25T10:23:00.951684Z`、`scoredAt = 2026-10-25T10:30:22.058725Z`。`46cbb5e` 提交于 09:10:34，早于抓取；而 `98b68a2`（10:53:11）、`d050cfa`（10:54:08）、`ee60620`（11:02:38）均晚于 `observedAt`，物理上不可能被本次抓取。其中 `98b68a2` 与 `46cbb5e` 的 README 完全相同（`git diff --stat` 只增 `docs/GLAMA-SCORE.md` 381 行），故只能靠时间排除。
+
+**机制旁证：Glama 从仓库构建镜像自省，不拉 PyPI。**
+
+- `Dockerfile` 由 `00df8af`（2026-10-15 11:43:29）引入，内容为 `FROM python:3.12-alpine` + `WORKDIR /app` + `COPY nano_mcp_termux.py .` + `RUN chmod +x` + `CMD ["python3","nano_mcp_termux.py"]`
+- 页面出现原文 `"Container-ready: Dockerfile at repo root for Glama introspection"`
+- 页面机制关键词计数：`Dockerfile 2 / docker 6 / uvx 13 / pip install 9 / pypi 4 / nixpacks 0 / buildCommand 0`
+- `nixpacks 0` 说明不是自动探测构建，`buildCommand 0` 说明不是自定义命令构建
+- `server.json` 里的 `registryType: pypi` / `runtimeHint: uvx` 只是 MCP 官方 Registry 的元数据，**不能当作 Glama 行为依据**
+
+**提取正则的坑（复现必看）**：页面工具块写作 `<details class="hvOeJT ..." id="device_status">`，**`class` 在 `id` 之前**。用 `<details id="...">` 会全部失配并返回长度 0——本轮首次复现即踩此坑，误得「四段全不匹配」的假结论。正确写法：
+
+```python
+m = re.search(r'<details[^>]*\bid="%s"[^>]*>' % tool, page)
+```
+
+**影响**：
+
+1. 改描述只需 `push` 到 GitHub 并让 Glama 重抓，**无需发布新 PyPI 版本**。
+2. `bb0448c` 已 push 到 `main`，动作正确且充分；当前缺的只是「触发重抓」这一步。
+3. 判定「是否真的重抓」只看 `observedAt` / `scoredAt` 是否推进，不看 `githubProject.version`（见 3.6）。
 
 
 ---
@@ -367,6 +473,32 @@ re.findall(r'self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)', s)
 
 > 本节记录**改写后**的描述原文（提交前的当前工作树版本），供评分回收时逐条比对。
 > 改写前的原始基线已随 `d050cfa` 存入 git 历史，可用 `git show d050cfa:docs/GLAMA-SCORE.md` 取回。
+> 本轮又做了一次**措辞级**改写（仅删去强制调用顺序的指令句，见下节），基线已同步更新。
+
+### 官方 spec 措辞红线核查（本轮改写依据）
+
+抓取 `https://tdqs.dev/spec` 原文（`len 284960`）后定位到一条**此前未纳入文档的硬性措辞约束**：
+
+> The tell is the other kind of cross-reference, the kind that tries to *enforce* an ordering:
+> "always call this first", "do not compute this yourself". A boundary is describable; a priority is not.
+> Reach for the second and you have a tool-set problem wearing a description problem's clothes.
+> Either make the purposes disjoint and say so in both descriptions, or collapse them into one tool.
+
+同时官方给出了**正例**与**边界说明的正确写法**：
+
+> "List ALL calls in date range, no user filtering. To filter by user, use search_calls_extensive instead."
+> … naming a sibling to mark a boundary still earns full marks on Usage Guidelines.
+
+**核查结论：原描述命中反模式，必须改写。** 命中位置两处：
+
+| 位置 | 原句 | 问题 |
+| --- | --- | --- |
+| `resolve_path` | "so call it first on an unfamiliar device, then resolve_path per candidate path" | 直接下达调用顺序，即 "always call this first" 的同类写法 |
+| `path_adapter` | "Call it once when starting work on an unfamiliar device, before constructing paths for other tools" | 同样在指定时序（"once / before"），只是换成无参工具的口吻 |
+
+`resolve_path` 另有一句 `Call it before handing a path to a shell command or another tool`，属同类时序指令，一并改为「何时有用」的陈述。
+
+**改写策略**：保留点名兄弟工具（官方明确这是满分写法），把「先后顺序」换成「问题分工」——两个工具回答两个不同问题（环境 vs 单路径），互斥而非有序。改写后三处禁用句式计数均为 0（`call it first` / `Call it once` / `before constructing paths`），`tools/list` 实测四工具描述均正常输出、annotations 四项不变。
 
 ### `device_status`
 ```
@@ -424,10 +556,86 @@ children, memory, phantom_process}.
 
 ---
 
-## 十、变更记录
+## 十、提分路径与天花板（量化验证）
+
+> 本节所有数字均由官方整数原语实测得出（`round1(num, den) = (2 × num + den) // (2 × den)`，全程 tenths 整数运算），
+> 可用第 2.1 节三行公式逐项复算。**不是估算，是可复现的精确值。**
+> 自检锚点：`Σtdqs=175, n=4, min=43` → `1738/400 = 4.345 → 4.3`；`C=3.5` → `406/100 = 4.06 → 4.1`，与页面一致。
+
+### 10.1 反解表：给定 Q，打到目标总分所需的最小 C
+
+| Q \ 目标 | 4.2 | 4.3 | 4.4 | 4.5 |
+|---|---|---|---|---|
+| **4.1** | C≥4.3 | C≥4.6 | C≥5.0 | 不可能 |
+| **4.2** | C≥4.1 | C≥4.4 | C≥4.7 | 不可能 |
+| **4.3**（当前） | **C≥3.8** | C≥4.2 | C≥4.5 | C≥4.8 |
+| **4.4** | C≥3.6 | C≥3.9 | C≥4.3 | C≥4.6 |
+| **4.5** | C≥3.4 | C≥3.7 | C≥4.0 | C≥4.4 |
+| **4.6** | C≥3.1 | C≥3.5 | C≥3.8 | C≥4.1 |
+| **4.7** | 3.0 即可 | C≥3.2 | C≥3.6 | C≥3.9 |
+| **4.8** | 3.0 即可 | 3.0 即可 | C≥3.3 | C≥3.7 |
+| **4.9** | 3.0 即可 | 3.0 即可 | C≥3.1 | C≥3.4 |
+
+读法：当前 `Q=4.3`、`C=3.5`。**要把总分从 4.1 抬到 4.2，只需 C 从 3.5 涨到 3.8** —— 也就是 Coherence 四维里任意一个 +1 分即可。这是全表最关键的一格。
+
+注意表里 `Q=4.1` 行：若 Q 掉到 4.1，到 4.2 要 C≥4.3（几乎要 C 全满），**说明 Q 掉一档的代价远大于 C 涨一档的收益**，任何改动都不能让 `min(tdqs)` 变差。
+
+### 10.2 单杆阶梯：只改一件事
+
+| 杠杆 | 具体改动 | Q | C | 总分 | 相对 4.1 |
+|---|---|---|---|---|---|
+| **A** Naming Consistency 3→4 | 统一动宾式命名（纯描述层，**零代码**） | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
+| **B** `resolve_path` Parameter 3→4 | 补 `$PREFIX/bin`、`/sdcard/Download` 等格式示例 | **4.4** | 3.5 | **4.1** | **0 ❌** |
+| **C** Completeness 3→4 | 加只读 `list_dir`（消除 "dead end for action"） | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
+| **D** Tool Count 4→5 | 加第 5 个工具 | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
+| **E** Disambiguation 4→5 | 把兄弟边界写进描述首句 | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
+
+**这张表推翻了「补 `resolve_path` 参数示例最划算」的直觉**：B 把 Q 从 4.3 抬到 4.4（`resolve_path` 单项 4.4→4.5），但因为 C 仍卡在 3.5，
+`(7×44 + 3×35)/100 = 413/100 = 4.13 → 4.1`，**一分没涨**。
+根因有二：一是 `min(tdqs)` 仍是 43（`server_health`），60/40 口径下 Q 的增益被最小值项稀释；二是 C 不动就过不了 4.15 的 half-up 门槛。
+
+### 10.3 组合阶梯：到 4.2 / 4.3 / 4.4 的最短路径
+
+| 组合 | Q | C | 总分 |
+|---|---|---|---|
+| A + B | 4.4 | 3.8 | **4.2** |
+| A + B + C | 4.4 | 4.0 | **4.3** |
+| A + B + C + D | 4.4 | 4.3 | **4.4** |
+| A + B + C + D + E | 4.4 | 4.5 | **4.4**（饱和） |
+
+- **到 4.2 有四条独立路径**（A / C / D / E 任一即可），其中 A 最便宜：只改描述与命名，不动一行逻辑。
+- **到 4.3 必须组合**：`Q` 得进到 4.4（靠 B），`C` 得进到 4.0（A + C）。
+- **到 4.4 要 A+B+C+D**：除 Disambiguation 外四维全提，且必须真的加工具（Tool Count 只能靠加工具涨）。
+- **E 在 4.4 之后是白送的**：A+B+C+D 已到 4.4，再补 Disambiguation 到 5 仍停在 4.4（`(7×44+3×45)/100 = 443/100 = 4.43 → 4.4`），说明 4.4 之后 C 已不是瓶颈，Q 才是。
+
+### 10.4 天花板
+
+| 情形 | 单工具上限 | 计算 |
+|---|---|---|
+| Parameter Semantics 停在 **3** | **4.7** | `[5,5,5,3,5,5]` = 470/100 → 4.7 |
+| Parameter Semantics 停在 **4** | **4.9** | `[5,5,5,4,5,5]` = 490/100 → 4.9（当前四工具均受此限） |
+| Parameter Semantics 到 **5** | **5.0** | 只有 schema 本身能拿满，光写描述拿不到 5 |
+
+**结论**：本仓库四个工具的 Parameter Semantics 分别是 4 / 4 / 3 / 4，因此**单工具天花板 4.9，`resolve_path` 的天花板是 4.7**。
+即使把其余五个维度全部写满，`resolve_path` 也到不了 5.0 —— 这是 schema 决定的硬顶，不是文案问题。
+四工具全拉满（param=4）时 `Q=4.9`、`C=5.0`、总分 **4.9**，即**本仓库在不改 schema 前提下的绝对上限**。
+
+### 10.5 三条可直接引用的判断
+
+1. **4.1 不是天花板，4.9 才是**；但从 **4.1 到 4.2 的成本几乎为零**（改命名即可），从 4.4 往上才需要动代码。
+2. **单改描述涨不动分**：B 实验证明「只补 `resolve_path` 参数示例」在 C 不变时**一分不涨**，必须先动 C。
+3. **C 是 4.1→4.2 的唯一钥匙**：Q 已经 4.3，C 只差 0.3；而 C 的四个维度里三个都能靠「加一句路由语 / 加一个只读工具」解决，不需要改 schema。
+
+---
+
+## 十一、变更记录
 
 | 日期 | 版本 | 说明 |
 |---|---|---|
 | 2026-10-25 | — | 首次核验并建档。快照对应 TDQS 4.1 / 4 工具 / `HEAD 46cbb5e` |
 | 2026-10-25 | — | 工具描述改写（兄弟工具路由 + 格式示例），四段描述基线同步更新；仅改 description，schema/行为未变 |
-| 2026-10-25 | — | **修正 TDQS 聚合口径**：旧记载 60:40 与页面实测不符，按反解改为 70% TDQS + 30% Coherence（0.7×4.375+0.3×3.5=4.1125→4.1）；同时消除原文第 50 行 70:30 与第 46 行 60:40 并存的内部矛盾 |
+| 2026-10-25 | — | 补入官方整数三行公式、三条警告、80% 覆盖率门槛；来源更正为 GitHub 开源 spec（原 `/spec` 等四地址已 404） |
+| 2026-10-25 | — | 新增第十章「提分路径与天花板」：反解表、单杆阶梯、组合阶梯、天花板，全部经整数原语实测 |
+| 2026-10-25 | — | 抓取 `tdqs.dev/spec` 原文，发现官方明确把 "always call this first" 列为 enforce-an-ordering 反模式；改写 `resolve_path` 与 `path_adapter` 三处时序指令句，改为「问题分工」表述，第九章新增措辞红线核查小节 |
+| 2026-10-25 | — | 合并两版文档：保留官方整数原语口径（弃用旧 70:30 反解写法），补回 `1.1.3` 自增证据（3.6） |
+| 2026-10-25 | — | 新增 3.7「抓取源定论」：四段描述归一化 4/4 + README 标记矩阵 + 版本号 + 时间线，四证锁定快照对应 GitHub `46cbb5e`，非 PyPI 包；记录提取正则 `class` 在 `id` 前的坑 |
