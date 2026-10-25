@@ -18,6 +18,9 @@
 #   3. the server actually answers `initialize` + `tools/list` over stdio
 #
 # Exit codes: 0 = all good, 1 = a real problem in the repo, 2 = local env issue.
+# A failing package index / network is classified as 2, never as 1, so a bad
+# mirror cannot masquerade as a broken repo. The index is pinned to pypi.org;
+# override with GLAMA_VERIFY_INDEX=https://... if you must.
 #
 # Usage:  bash scripts/verify_glama_build.sh
 # Deps:   uv (https://docs.astral.sh/uv/) — the script tells you if it is missing.
@@ -52,6 +55,21 @@ cd "$WORK" || fail_env "cannot enter $WORK"
 export UV_LINK_MODE=copy
 export UV_CACHE_DIR="$WORK/.uvcache"
 
+# Pin the package index. Glama builds inside a clean container with direct PyPI
+# access; a local mirror inherited from the environment (e.g. a Tsinghua mirror
+# that answers 403) would make a healthy repo look broken. Override only if you
+# deliberately want a different index: GLAMA_VERIFY_INDEX=https://... ./verify...
+UV_INDEX_URL="${GLAMA_VERIFY_INDEX:-https://pypi.org/simple}"
+UV_DEFAULT_INDEX="$UV_INDEX_URL"
+export UV_INDEX_URL UV_DEFAULT_INDEX
+
+# Distinguish "this repo is broken" from "my sandbox could not reach the index".
+# Without this, a 403/network failure exits 1 and falsely blames the repo.
+is_env_failure() {
+    printf '%s\n' "$1" | grep -qiE \
+        '403|forbidden|429|could not connect|failed to (fetch|download)|network is unreachable|timed out|temporary failure in name resolution|error sending request|proxy|ssl|certificate'
+}
+
 echo
 echo "== step 1/3: uv venv"
 uv venv >/dev/null 2>&1 || fail_env "uv venv failed"
@@ -62,6 +80,9 @@ uv venv >/dev/null 2>&1 || fail_env "uv venv failed"
 echo "== step 2/3: uv pip install -e ."
 if ! out="$(uv pip install -e . 2>&1)"; then
     echo "$out" >&2
+    if is_env_failure "$out"; then
+        fail_env "uv pip install -e . failed for an environment reason (index/network), not a repo problem — rerun with network access to pypi.org"
+    fi
     fail_repo "uv pip install -e . failed — Glama's build would fail the same way"
 fi
 echo "$out" | grep -E 'Installed|Built' | sed 's/^/        /'
