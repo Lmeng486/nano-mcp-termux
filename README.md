@@ -169,7 +169,29 @@ python3 test_lifecycle_orphan.py
 ```bash
 python3 test_client.py            # 32 protocol / tool / lifecycle assertions
 python3 test_lifecycle_orphan.py  # orphan-leak A/B regression (1.0.0 vs 1.1.0)
+bash scripts/verify_glama_build.sh # Glama-build reproduction (see below)
 ```
+
+`verify_glama_build.sh` answers one question: *will Glama's builder be able to
+install and introspect this repo?* It replays the same toolchain Glama uses
+(`uv venv && uv pip install -e .`, i.e. a newer setuptools than most dev
+machines have), then asserts the console entry point exists and that the server
+answers `initialize` + `tools/list` over stdio. Exit codes are deliberately
+three-valued so the script never lies about whose fault a failure is:
+
+| Exit | Meaning |
+|------|---------|
+| `0` | Builds and introspects cleanly |
+| `1` | Real problem in this repo (bad metadata, missing entry point, no tools) |
+| `2` | Local environment problem (no `uv`, index unreachable, mirror returns 403) |
+
+The index is pinned to `pypi.org` on purpose — a local mirror inherited from
+your shell profile can return 403 and make a healthy repo look broken. Override
+with `GLAMA_VERIFY_INDEX=https://your-mirror/simple` only if you mean it.
+
+Deprecation warnings about `project.license` are expected and non-fatal: the
+SPDX form that silences them needs `setuptools>=77`, which requires Python 3.9+,
+while this project still supports 3.8 source builds.
 
 ## ⚙️ Environment variables
 
