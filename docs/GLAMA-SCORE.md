@@ -383,13 +383,14 @@ storage, arch, memory}.
 ```
 Report the runtime's path environment so you can translate host paths
 correctly: detected env class (termux/proot/android/linux),
-HOME/PREFIX/TMPDIR, each Android shared-storage root with its real mount, all
-noexec mounts that block in-place script execution, and runtime-specific
-notes. Call it once when starting work on an unfamiliar device, before
-constructing paths for other tools. Takes no arguments. One-shot environment
-map: to validate a single candidate path use `resolve_path` instead. Returns
-{env, home, prefix, tmpdir, python, platform, android_roots, noexec_mounts,
-notes}.
+HOME/PREFIX/TMPDIR, each Android shared-storage root with its real mount,
+all noexec mounts that block in-place script execution, and runtime-specific
+notes. Takes no arguments. Sibling boundary: this answers the environment
+question (env class, HOME/PREFIX/TMPDIR, mount roots); `resolve_path`
+answers the per-path question (expansion, mount, alternatives for one path).
+Use `path_adapter` when the environment itself is unknown, `resolve_path` to
+validate a single candidate path. Returns {env, home, prefix, tmpdir,
+python, platform, android_roots, noexec_mounts, notes}.
 ```
 ### `resolve_path`
 ```
@@ -399,14 +400,16 @@ the path, and lists every Android-equivalent spelling (/sdcard <->
 /storage/emulated/0 <-> $HOME/storage/shared). Equivalent inputs:
 /sdcard/Download/x.txt, $HOME/storage/shared/Download/x.txt,
 ~/storage/shared/Download/x.txt, and relative docs/report.md (against cwd).
-Expansion: ~ and $HOME become the server's HOME; $PREFIX is the install prefix
-(e.g. /data/data/com.termux/files/usr); $TMPDIR is the server's own temp dir,
-never the client's. Call it before handing a path to a shell command or
-another tool; skip it for paths already known-good on plain Linux. Sibling
-boundary: `path_adapter` maps the environment once and takes no arguments, so
-call it first on an unfamiliar device, then `resolve_path` per candidate path.
-Returns {input, expanded, resolved, env, exists, is_dir, is_file, is_symlink,
-readable, writable, executable, mount, alternatives, warnings}.
+Expansion: ~ and $HOME become the server's HOME; $PREFIX is the install
+prefix (e.g. /data/data/com.termux/files/usr); $TMPDIR is the server's own
+temp dir, never the client's. Useful when a path has to be handed to a shell
+command or another tool; not needed for paths already known-good on plain
+Linux. Sibling boundary: `path_adapter` reports the environment map itself
+(env class, HOME/PREFIX/TMPDIR, mount roots) and takes no arguments;
+`resolve_path` reports one concrete path. Use `path_adapter` for the
+environment, `resolve_path` for a candidate path. Returns {input, expanded,
+resolved, env, exists, is_dir, is_file, is_symlink, readable, writable,
+executable, mount, alternatives, warnings}.
 ```
 ### `server_health`
 ```
