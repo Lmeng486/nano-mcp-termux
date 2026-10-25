@@ -206,6 +206,7 @@ while this project still supports 3.8 source builds.
 - **Verification report**: [awesome-termux-mcp](https://github.com/Lmeng486/awesome-termux-mcp)
 - **Measured overhead report** (this server as subject under test, all numbers from a real device): [MCP on Mobile: Measured Overhead Report](https://github.com/Lmeng486/awesome-termux-mcp/blob/main/docs/MCP-ON-MOBILE-OVERHEAD.md)
 - **Dev.to article**: [Showdev: A zero-dependency MCP server that runs on Android Termux](https://dev.to/lmeng486/showdev-a-zero-dependency-mcp-server-that-runs-on-android-termux-28fe)
+- **Glama score verification** (TDQS 4.1 / grade A, with version-metadata forensics): [docs/GLAMA-SCORE.md](docs/GLAMA-SCORE.md)
 
 ---
 
