@@ -3,10 +3,10 @@
 > 本文件记录 `nano-mcp-termux` 在 [Glama.ai](https://glama.ai/mcp/servers/Lmeng486/nano-mcp-termux) 上的评分快照、版本元数据核验过程与结论。
 > 目的是：**下次对 Glama 评分有疑问时，先看这里，不必从头排障。**
 
-- 快照时间：**2026-10-25 10:30（Glama 侧评分时间戳）**
+- 快照时间：**2026-10-25 16:55（Glama 侧评分时间戳）**（首次快照 10:30 已被本次重抓覆盖）
 - 抓取时间：2026-10-25
 - 核验对象：`Lmeng486/nano-mcp-termux`（PyPI: `nano-mcp-termux`，官方 Registry: `io.github.Lmeng486/nano-mcp-termux`）
-- 核验仓库状态：本地 `HEAD = 46cbb5e`，远端 `main` 同提交
+- 核验仓库状态：本地 `HEAD = f698e91`，远端 `main` 同提交
 - 数据来源：Glama 页面 HTML（公开 API 需 API key，返回 401）
 
 ---
@@ -18,13 +18,13 @@
 | Quality Grade | **A** | ✅ |
 | Maintenance Grade | **A** | ✅ |
 | License Grade | **A** | ✅ |
-| TDQS 总分 | **A · 4.1 / 5.0**（4 个工具聚合） | ✅ 上等区间 |
-| Server Coherence | 4 / 3 / 4 / 3（四维度） | ⚠️ 主要拖累项 |
+| TDQS 总分 | **A · 4.6 / 5.0**（4 个工具聚合） | ✅ 上等区间 |
+| Server Coherence | 5 / 4 / 4 / 4（四维度） | ✅ 已无 3 分项 |
 | ⚠️ UI 告警 | **无** | ✅ 已核实排除 |
 | 认领状态 | `author:claimed` | ✅ 已认领 |
 | 版本 `1.1.2` / `1.1.3` 疑点 | Glama 内部 release 编号自增，非发布物 | ✅ 无需处理 |
 
-**一句话总结**：服务器状态健康，评分扎实，此前担心的两个问题（页面 ⚠️ 告警、版本号不一致）**均不成立**。
+**一句话总结**：服务器状态健康，评分扎实，此前担心的两个问题（页面 ⚠️ 告警、版本号不一致）**均不成立**；重抓后总分由 `4.1` 升至 `4.6`，Coherence 已无 3 分项。
 
 ---
 
@@ -34,14 +34,14 @@
 
 | 工具 | 等级 | 总分 | Behavioral<br>Transparency (20%) | Conciseness<br>(10%) | Contextual<br>Completeness (10%) | Parameter<br>Semantics (15%) | Purpose<br>Clarity (25%) | Usage<br>Guidelines (20%) |
 |---|---|---|---|---|---|---|---|---|
-| `device_status` | A | **4.4** | 5 | 5 | 5 | 4 | 4 | 4 |
-| `path_adapter` | A | **4.4** | 4 | 4 | 5 | 4 | 5 | 4 |
-| `resolve_path` | A | **4.4** | 5 | 4 | 5 | **3** | 4 | 5 |
-| `server_health` | A | **4.3** | 4 | 4 | 4 | 4 | 5 | 4 |
+| `device_status` | A | **4.7** | 4 | 5 | 5 | 4 | 5 | 5 |
+| `path_adapter` | A | **4.8** | 5 | 5 | 4 | 4 | 5 | 5 |
+| `resolve_path` | A | **4.8** | 5 | 4 | 5 | 4 | 5 | 5 |
+| `server_health` | A | **4.7** | 4 | 5 | 5 | 4 | 5 | 5 |
 
 - 极差仅 **0.1**，四份描述质量均衡，无短板工具。
-- 唯一 **3 分**：`resolve_path` 的 Parameter Semantics。
-- 唯一两项 4.3 以下维度集中在 `server_health` 的 Behavioral Transparency / Conciseness / Contextual Completeness（均 4 分）。
+- **已无 3 分维度**：此前 `resolve_path` 的 Parameter Semantics 3 分已升至 4 分（四个工具 Parameters 现均为 4）。
+- 四工具 24 个维度中 **16 个为 5 分、8 个为 4 分，无 3 分及以下**。8 个 4 分项是：四工具各自的 Parameters（4 处，零参数工具基线即 4，属规格上限）+ `device_status` Behavior + `path_adapter` Completeness + `resolve_path` Conciseness + `server_health` Behavior。
 
 **TDQS 聚合口径**（已用官方开源仓库 spec 的整数原语 + 精确有理数运算，100% 复现页面全部五个分数）：
 
@@ -52,9 +52,9 @@ C       = mean(coherence 四维)
 总分     = 0.7 × Q + 0.3 × C
 ```
 
-代入实测值：单工具 `4.4 / 4.4 / 4.4 / 4.3` → `mean = 4.375`、`min = 4.3` →
-`Q = 0.6×4.375 + 0.4×4.3 = 4.345 → 4.3`；`C = (4+3+4+3)/4 = 3.5`；
-`总分 = 0.7×4.3 + 0.3×3.5 = 4.06 → 4.1`。**与页面徽章、`overallScore 4.1`、`coherenceScore 3.5` 全部一致。**
+代入实测值：单工具 `4.7 / 4.8 / 4.8 / 4.7` → `mean = 4.75`、`min = 4.7` →
+`Q = 0.6×4.75 + 0.4×4.7 = 4.73 → 4.7`；`C = (5+4+4+4)/4 = 4.25 → 4.3`；
+`总分 = 0.7×4.7 + 0.3×4.3 = 4.58 → 4.6`。**与页面徽章 `4.6`、`overallScore 4.6`、`coherenceScore 4.3` 全部一致。**
 
 **官方 spec 原文的整数实现（照抄这三行即可复现，权威性高于任何页面反解）**：
 
@@ -66,13 +66,13 @@ overallScore            = round1(7 × descriptionQualityScore + 3 × coherenceSc
 ```
 
 其中 `tdqs` 是单工具的十分位整数（10–50，即 `4.4 → 44`），`n` 是工具数，`round1` 是整数 half-up 原语
-`round1(num, den) = (2 × num + den) // (2 × den)`。
-代入 `Σtdqs = 44+44+44+43 = 175`、`n = 4`、`min = 43`：
-`(6×175 + 4×4×43) / (100×4) = (1050 + 688) / 400 = 1738/400 = 4.345 → 4.3`；
-`C = (4+3+4+3)/4 = 3.5`；`(7×43 + 3×35)/100 = 406/100 = 4.06 → 4.1`。
+`round1(num, den) = (20 × num + den) // (2 × den)`（返回**十分位整数**，如 `round1(1892, 400) = 47`，即 `4.7`）。
+代入 `Σtdqs = 47+48+48+47 = 190`、`n = 4`、`min = 47`：
+`(6×190 + 4×4×47) / (100×4) = (1140 + 752) / 400 = 1892/400 = 4.73 → 4.7`；
+`C = (5+4+4+4)/4 = 4.25 → 4.3`；`(7×47 + 3×43)/100 = 458/100 = 4.58 → 4.6`。
 与上面的分数式写法结果完全等价，但整数写法不会踩浮点。
 
-> 注：若把 `Q` 简化为纯均值 `4.4`，总分也是 `4.1`（`0.7×4.4+0.3×3.5=4.13`），仅凭页面总分无法区分两种口径；此处采用官方 spec 的 `60/40` 定义，因为它能同时解释 `min` 项的存在意义。
+> 注：若把 `Q` 简化为纯均值 `4.75`，总分也是 `4.6`（`0.7×4.75+0.3×4.25=4.60`），仅凭页面总分无法区分两种口径；此处采用官方 spec 的 `60/40` 定义，因为它能同时解释 `min` 项的存在意义。
 > 旧版本文档写的「w = 0.70 反解、无最小值参与」是当时未拿到 spec 时的推测，已废弃。
 
 > **来源更正**：`https://glama.ai/spec`、`/mcp/spec`、`/spec/tdqs`、`/docs/tdqs` 四个地址当前**全部 404**。
@@ -86,8 +86,8 @@ overallScore            = round1(7 × descriptionQualityScore + 3 × coherenceSc
 官方 spec 对此有三条明确警告，逐条都是会真扣 0.1 分的实操陷阱：
 
 1. **`mean` 必须是精确的 `Σtdqs / n`，不能用已发布的保留一位小数的 `meanTdqs`。**
-   本条实测踩中：先把 `mean` 取整成 `4.4`，再算 `0.6×4.4 + 0.4×4.3 = 4.36 → 4.4`，
-   `Q` 被错算成 `4.4`（正确 `4.3`），总分随之错算成 `4.1` 之外的值。必须用 `4.375`。
+   本条实测踩中：先把 `mean` 取整成 `4.8`，再算 `0.6×4.8 + 0.4×4.7 = 4.76 → 4.8`，
+   `Q` 被错算成 `4.8`（正确 `4.7`），总分随之错算成 `4.6` 之外的值。必须用 `4.75`。
 2. **Python 的 `round` 与 `Math.round` 在半值上方向相反。**
    coherence 四维之和为奇数时均值必然落在半值上，这类平局并不罕见，故一律显式 half-up。
 3. **浮点累积会跨档。** 官方举例 `0.7 × 3.0 + 0.3 × 4.5` 在 double 下累加到略小于 `3.45`，
@@ -104,24 +104,31 @@ overallScore            = round1(7 × descriptionQualityScore + 3 × coherenceSc
 
 | 维度 | 得分 | 评语要点 |
 |---|---|---|
-| Disambiguation（消歧） | **4 / 5** | `device_status` 与 `server_health` 靠 "host device vs server process" 区分清晰；`resolve_path` 与 `path_adapter` 靠 "单路径 vs 环境总览" 区分清晰 |
-| Naming Consistency（命名一致） | **3 / 5** | 三种命名模式并存：名词式 `device_status` / `server_health`、动宾式 `resolve_path`、名词+agent 式 `path_adapter`，**无统一约定** |
-| Tool Count（工具数量） | **4 / 5** | 4 个工具精简，匹配只读诊断定位 |
-| Completeness（完整性） | **3 / 5** | 评语原话：**"a dead end for action"** — 能诊断不能操作，无法列目录、批量解析或在解析后执行动作 |
+| Disambiguation（消歧） | **5 / 5** | 评语原话：「Each tool targets a distinct question: device hardware (`device_status`), server process state (`server_health`), one candidate path (`resolve_path`), and the runtime path environment (`path_adapter`). **Descriptions explicitly state sibling boundaries and even tell the agent which tool to use instead**, eliminating misselection.」—— 本轮描述改写的核心成果：兄弟路由语从无到有，此项由 4 分升至满分 |
+| Naming Consistency（命名一致） | **4 / 5** | 「All names are snake_case and self-describing, with a clear domain term per tool. **The pattern is noun_noun for three tools (`device_status`, `server_health`, `path_adapter`) and verb_noun for one (`resolve_path`), a minor deviation** that is still highly readable.」—— 仅剩 `resolve_path` 一个动宾式命名的小偏差，不足以扣到 3 分 |
+| Tool Count（工具数量） | **4 / 5** | 「Four tools is **on the small side** but each covers a distinct, non-overlapping diagnostic concern, so nothing feels padded or redundant. The surface is tightly scoped to introspection rather than trying to be a general shell wrapper.」—— 数量偏少是此维度的结构性天花板，4 个工具无法自己涨到 5 |
+| Completeness（完整性） | **4 / 5** | 「The stated domain — read-only device, server, and path introspection — is well covered, including Android-specific concerns like phantom processes and shared-storage aliases. **Minor gaps remain** (no general process/network/log inspection), **but agents can work around these via other tools or shell commands.**」—— 从 3 分升 4 分的关键是描述里写明了「变通路径」，评审因此不再判定为死路 |
 
 ### 2.3 逐工具评语中的扣分原因（可直接转改进项）
 
-| 工具 | 维度 | 扣分原因（评语要点） |
-|---|---|---|
-| `resolve_path` | Parameters (3) | "Schema coverage is 100% and the single parameter is fully documented there, so the baseline is 3. The description restates the same facts ... without adding format or syntax detail beyond the schema" |
-| `resolve_path` | Purpose (4) | "it never mentions the sibling `path_adapter`, so an agent cannot distinguish the two from this text alone" |
-| `server_health` | Usage (4) | "It doesn't explicitly route the agent away from a sibling" |
-| `device_status` | Purpose (4) | "no sibling is named, so an agent must infer the boundary" |
-| `device_status` | Usage (4) | "No explicit when-not or named alternative (e.g., use `server_health` for the remote server vs. this for local hardware)" |
-| `path_adapter` | Behavior (4) | "the 'side effects: none' sentence is somewhat redundant" |
-| `path_adapter` | Conciseness (4) | "Minor waste in restating read-only/idempotent already covered by annotations" |
+24 个维度中已无 3 分及以下，剩余 **8 个 4 分项**，逐条列出（评语原话摘录）：
 
-**共性诊断**：绝大多数扣分都指向同一个根因 —— **描述里没有点名兄弟工具、没有 "use X instead of Y when Z" 的路由语**。加一句即可同时抬升 Purpose（25%）与 Usage Guidelines（20%）。
+| 工具 | 维度 | 扣分原因（评语原文要点） | 可改进性 |
+|---|---|---|---|
+| `device_status` | Behavioral Transparency (4) | 「The annotations already declare `readOnlyHint`, `idempotentHint`, and `destructiveHint=false`, so safety is covered... That partial-failure behavior is the key thing an agent needs, **though it says nothing about freshness/caching of the snapshot or cost of the call**.」 | ✅ 可改：补一句「快照为实时读取、无缓存、单次调用开销极小」 |
+| `device_status` | Parameter Semantics (4) | 「**Zero parameters, so there is nothing to disambiguate and the baseline is 4.**」 | ❌ 不可改：零参数工具的结构性上限 |
+| `path_adapter` | Contextual Completeness (4) | 「It is complete for a zero-parameter read-only diagnostic tool, **though it could mention whether the reported environment is cached or live**.」 | ✅ 可改：补一句「环境为实时读取，反映调用时刻的进程状态」 |
+| `path_adapter` | Parameter Semantics (4) | 同 `device_status`：零参数，基线即 4 | ❌ 不可改 |
+| `resolve_path` | Conciseness (4) | 「**It is somewhat dense and run-on in the first sentence**, but the density is justified by the number of path-expansion rules being communicated.」 | ✅ 可改：首句拆成两句 |
+| `resolve_path` | Parameter Semantics (4) | 「**Schema coverage is 100%, so the baseline is 3, but the description adds meaningful semantics beyond the schema**: concrete equivalent input forms, relative-path handling against the working directory, and the specific meanings of `~`, `$HOME`, `$PREFIX`, and `$TMPDIR`. The schema already covers required/non-empty behavior, so this is not a full 5.」 | ✅ 已从 3 升 4（本轮唯一升档项）；再涨需描述给出 schema 之外的新信息 |
+| `server_health` | Behavioral Transparency (4) | 「Annotations already declare readOnly, idempotent, non-destructive and closed-world... **It stops short of saying anything about cost, frequency, or what an unhealthy result looks like**, but the scope and content disclosure is solid.」 | ✅ 可改：补一句异常形态（`status: "unhealthy"` 时返回哪些字段） |
+| `server_health` | Parameter Semantics (4) | 同前：零参数，基线即 4 | ❌ 不可改 |
+
+**共性诊断（本轮已基本消化）**：上一版 7 条扣分里有 5 条指向同一个根因 —— **描述没有点名兄弟工具、没有 "use X instead of Y when Z" 的路由语**。本轮描述改写补入兄弟路由语后，`Disambiguation` 由 4 涨到 5，`device_status` / `server_health` 的 Purpose 与 Usage 全部升到 5，`resolve_path` 的 Purpose 也升到 5 —— **这条根因已不再是扣分项**。
+
+**新浮现的共性根因**：剩余可改的 4 个 4 分项（`device_status` Behavior、`path_adapter` Completeness、`server_health` Behavior、`resolve_path` Conciseness）共同指向 **「运行时语义披露不足」** —— 即「数据是实时还是缓存」「调用代价多大」「异常时返回什么形态」这三类信息。这是下一轮改写的目标，但**受聚合公式与权重门槛限制，单项改写未必能换来分数变化**（见第十节）。
+
+**4 个不可改项**：四工具各自的 Parameter Semantics 均为 4，原因是零参数工具「there is nothing to disambiguate and the baseline is 4」。这是评分规范对零参数工具的硬基线，**除非给工具加参数，否则永远涨不到 5**。
 
 ### 2.4 评语中的正面评价（摘录）
 
@@ -286,46 +293,64 @@ m = re.search(r'<details[^>]*\bid="%s"[^>]*>' % tool, page)
 **影响**：
 
 1. 改描述只需 `push` 到 GitHub 并让 Glama 重抓，**无需发布新 PyPI 版本**。
-2. `bb0448c` 已 push 到 `main`，动作正确且充分；当前缺的只是「触发重抓」这一步。
+2. `bb0448c` 已 push 到 `main`，动作正确且充分。**重抓已于 2026-10-25 16:55 完成**：`observedAt` / `scoredAt` 均已推进，快照由 TDQS 4.1 更新为 **4.6**（四工具 4.7 / 4.8 / 4.8 / 4.7），实测证明「改 description → push → 手动重抓」这条链路端到端可用。
 3. 判定「是否真的重抓」只看 `observedAt` / `scoredAt` 是否推进，不看 `githubProject.version`（见 3.6）。
 
 
 ---
 
 ## 四、可执行的优化建议（按投入产出排序）
+> 前提：当前 `Q=4.7`、`C=4.3`、总分 **4.6**。本章所有排序都以「能否真的让总分进位」为准，
+> 而不是以「某个维度看起来差多少分」为准——两者在 half-up 聚合下经常不一致（见第十节）。
+### 优先级 1 — 补「运行时语义披露」（唯一能立刻 +0.1 的动作）
+当前 `Q=4.7`，**只要 `Q` 涨到 4.8 总分就是 4.7**。而 `Q` 涨到 4.8 并不需要四项全动，
+只要 `Σtdqs` 从 190 抬到 192、且 `min(tdqs)` 不下降即可 —— **任意一个 4.7 分的工具升到 4.8 就够了**。
 
-### 优先级 1 — 抬升 Usage Guidelines（权重 20%，四工具均有空间）
+两条等价的单杆路径（二选一，均已实测到 **4.7**）：
 
-给每个工具补一句 "use X instead of Y when Z" 的路由语。示例（`device_status`）：
+| 路径 | 改动 | 具体补什么 |
+|---|---|---|
+| **D** | `device_status` Behavioral Transparency 4→5 | 「快照为实时读取、无缓存；单次调用开销极小」 |
+| **E** | `server_health` Behavioral Transparency 4→5 | 「`status` 为 `unhealthy` 时返回哪些字段、异常形态是什么」 |
 
-> "For the MCP server process itself (uptime, children, RSS) use `server_health` instead; this tool reports the host hardware."
+评语已经把缺的东西点名到句子级别：
+> 「…**it says nothing about freshness/caching of the snapshot or cost of the call**.」（`device_status`）
+> 「**It stops short of saying anything about cost, frequency, or what an unhealthy result looks like**…」（`server_health`）
 
-`server_health`、`resolve_path` 同理，明确指向兄弟工具。
-**这一句话能同时抬升 Purpose（25%）和 Usage Guidelines（20%）两项。**
+这两句都是**纯描述层改动，零代码、零 schema 变更、无 breaking change**，是全书性价比最高的动作。
 
-### 优先级 2 — 抬升 `resolve_path` 的 Parameter Semantics（唯一 3 分，权重 15%）
+⚠️ **`D` 与 `E` 不要同时做**：实测 `D+E` 仍是 4.7（`Q` 卡在 4.8、`C` 未动），第二句是白写的。
+先落一条，等 `C` 跟上再看要不要补另一条。
+### 优先级 2 — `resolve_path` 首句拆句（不涨分，但降风险）
+评语：「**It is somewhat dense and run-on in the first sentence**, but the density is justified…」
+把首句按「展开规则 / 相对路径处理 / 等价输入形式」拆成两三句，可读性提升。
 
-在描述里补具体格式/语法示例：`$PREFIX/bin`、`/sdcard/Download`、`~/storage/shared`，并说明 `~` / `$HOME` / `$PREFIX` / `$TMPDIR` 的展开规则。
-目标：让描述在 schema 之外提供**格式或语法细节**。
+⚠️ **实测不涨分**：`F`（`resolve_path` Conciseness 4→5）→ 该工具 4.8→4.9、`Σtdqs` 191、
+`Q=round1(6×191+4×4×47,400)=1898/400=4.745→4.7`，**差 0.005 卡在 half-up 门外**，总分不动。
+所以这一项只按「可读性债」做，别指望分数。
+### 优先级 3 — Coherence 两维 +1（另一条到 4.7 的路，但成本高）
+`A`（Naming 4→5）+`C`（Completeness 4→5）→ `C` 由 4.3 到 4.8、`Q` 不变，总分 **4.7**。
+- 只动**一维**是无效的：`C` 会停在 4.5，`round1(7×47+3×45,100)=464/100=4.64→4.6`，一分不涨。
+- 因为 `C` 只能取 `4.3 / 4.5 / 4.8 / 5.0` 四个离散值（四维和只可能 17/18/19/20），**没有「涨一点」的中间档**。
+- 成本上，`A`（改命名）是 breaking change，`C`（加只读 `list_dir`）是新增工具面 —— 都比优先级 1 贵得多。
+### 优先级 4 — 4.8 起必须「双轨」
+到 **4.8** 需要 `Q=4.8` 且 `C=4.8` 同时成立：
+- `Q=4.8` → 优先级 1 的 D 或 E；
+- `C=4.8` → 优先级 3 的 A + C 两维同时 +1。
 
-### 优先级 3 — 命名一致性（3 / 5）
-
-统一为动宾式（考虑 `resolve_path` / `path_adapter` 都是动作类）：
-`device_status` → `get_device_status`，`server_health` → `get_server_health`。
-
-⚠️ **这是 breaking change**，需同步改 README、`server.json`、测试和 release。成本明显高于前两项，建议评估是否值得。
-
-### 优先级 4 — Completeness（3 / 5，"dead end for action"）
-
-评语认为"只能诊断不能操作"是结构性问题。可选方案：
-- 加只读 `list_dir`（列目录，带深度和过滤）
-- 加批量 `resolve_paths`
-
-⚠️ 这是**新增工具**，会改变 Tool Count 的评分逻辑。建议先完成优先级 1、2，观察总分变化后再决定。
-
+即 `D + A + C` 组合（实测 4.8）。单轨任何一条路都封顶在 4.7。
+到 **4.9** 则必须 `Q=4.9`（四工具全部 4.9，即 `D+E+F+G`）**且** `C≥4.8`（`A+C`）—— 五处改动同时落地，性价比陡降。
+### 不建议做的事
+1. **不要为了 Tool Count 加第 5 个工具**。`B`（加一个同为 4.7 的第 5 工具）只把 `C` 抬到 4.5，总分仍 4.6；
+   而它同时扩大了 schema 面、测试面和 release 面。**纯负收益。**
+2. **不要改 schema 去追 Parameter Semantics**。四个工具里三个零参数、一个 100% schema 覆盖，
+   基线由规范硬定为 4；加参数只会破坏「零参数只读诊断」这个已有加分点。
+3. **不要指望单维 Coherence**。`C` 离散，单维 +1 只到 4.5，跨不过 4.64 的门槛。
 ### 收尾提醒
-
-改完描述后需重新点 **Build & Release** 触发 Glama 重新 introspect，评分页要等它重跑完才更新。
+- 描述改完**不会自动生效**：Glama 无 webhook、无 resync API，只能由仓库所有者登录 GitHub OAuth 后
+  在 `Repository syncs` 面板手动点重抓。
+- 判断是否真的重抓成功，**只认页面上的 `observedAt` / `scoredAt` 是否推进**，不要看 README 里写的分数
+  （README 是仓库侧文本，与评分快照无关；页面抓的 README 可能长期滞后于仓库最新版）。
 
 ---
 
@@ -557,74 +582,87 @@ children, memory, phantom_process}.
 ---
 
 ## 十、提分路径与天花板（量化验证）
-
 > 本节所有数字均由官方整数原语实测得出（`round1(num, den) = (2 × num + den) // (2 × den)`，全程 tenths 整数运算），
 > 可用第 2.1 节三行公式逐项复算。**不是估算，是可复现的精确值。**
-> 自检锚点：`Σtdqs=175, n=4, min=43` → `1738/400 = 4.345 → 4.3`；`C=3.5` → `406/100 = 4.06 → 4.1`，与页面一致。
-
+> 自检锚点：`Σtdqs=190, n=4, min=47` → `1892/400 = 4.73 → 4.7`；`C=4.25→4.3` → `458/100 = 4.58 → 4.6`，与页面一致。
 ### 10.1 反解表：给定 Q，打到目标总分所需的最小 C
-
-| Q \ 目标 | 4.2 | 4.3 | 4.4 | 4.5 |
+| Q \ 目标 | 4.7 | 4.8 | 4.9 | 5.0 |
 |---|---|---|---|---|
-| **4.1** | C≥4.3 | C≥4.6 | C≥5.0 | 不可能 |
-| **4.2** | C≥4.1 | C≥4.4 | C≥4.7 | 不可能 |
-| **4.3**（当前） | **C≥3.8** | C≥4.2 | C≥4.5 | C≥4.8 |
-| **4.4** | C≥3.6 | C≥3.9 | C≥4.3 | C≥4.6 |
-| **4.5** | C≥3.4 | C≥3.7 | C≥4.0 | C≥4.4 |
-| **4.6** | C≥3.1 | C≥3.5 | C≥3.8 | C≥4.1 |
-| **4.7** | 3.0 即可 | C≥3.2 | C≥3.6 | C≥3.9 |
-| **4.8** | 3.0 即可 | 3.0 即可 | C≥3.3 | C≥3.7 |
-| **4.9** | 3.0 即可 | 3.0 即可 | C≥3.1 | C≥3.4 |
+| **4.5** | C≥5.0 | 不可能 | 不可能 | 不可能 |
+| **4.6** | C≥4.8 | 不可能 | 不可能 | 不可能 |
+| **4.7**（当前） | **C≥4.6** | C≥4.9 | 不可能 | 不可能 |
+| **4.8** | C≥4.3（已满足） | C≥4.7 | C≥5.0 | 不可能 |
+| **4.9** | C≥4.1 | C≥4.4 | C≥4.8 | 不可能 |
+| **5.0** | C≥3.9 | C≥4.2 | C≥4.5 | C≥4.9 |
 
-读法：当前 `Q=4.3`、`C=3.5`。**要把总分从 4.1 抬到 4.2，只需 C 从 3.5 涨到 3.8** —— 也就是 Coherence 四维里任意一个 +1 分即可。这是全表最关键的一格。
+⚠️ **这张表必须配合「C 的离散性」读**：Coherence 四维和 `S_c` 只可能是 17 / 18 / 19 / 20，
+经 `round1(S_c, 4)` 分别得 **4.3 / 4.5 / 4.8 / 5.0** —— **`C=4.6` 与 `C=4.7` 物理上不可达**。
+因此表里所有形如「C≥4.6」「C≥4.7」的格子，实际含义都是「**C 必须直接跳到 4.8**」（两维同时 +1）。
 
-注意表里 `Q=4.1` 行：若 Q 掉到 4.1，到 4.2 要 C≥4.3（几乎要 C 全满），**说明 Q 掉一档的代价远大于 C 涨一档的收益**，任何改动都不能让 `min(tdqs)` 变差。
+读法：当前 `Q=4.7`、`C=4.3`、总分 4.6。到 4.7 有**两条互相独立**的路：
+- **抬 Q**：`Q=4.8` 时只要 `C≥4.3`（现状即满足）→ 见 10.2 的 D 或 E，**改一句描述即可**；
+- **抬 C**：`C` 从 4.3 直接到 4.8（两维 +1）→ 见 10.2 的 A+C，**要改命名或加工具**。
 
-### 10.2 单杆阶梯：只改一件事
+**两条路的成本差一个量级，优先级由此确定。**
+注意 `Q=4.5` / `4.6` 两行：`Q` 一旦掉档，到 4.7 就必须 `C≥5.0` 或直接不可能 ——
+**任何改动都不能让 `min(tdqs)` 变差**，Q 掉一档的代价远大于 C 涨一档的收益。
+### 10.2 单杆阶梯：只改一件事（基线 4.6）
+| 杠杆 | 具体改动 | 四工具单项 | Q | C | 总分 | 相对 4.6 |
+|---|---|---|---|---|---|---|
+| **D** `device_status` Behavior 4→5 | 补「实时无缓存、调用开销极小」 | 4.9/4.8/4.8/4.7 | **4.8** | 4.3 | **4.7** | **+0.1 ✅** |
+| **E** `server_health` Behavior 4→5 | 补「unhealthy 时返回什么」 | 4.7/4.8/4.8/4.9 | **4.8** | 4.3 | **4.7** | **+0.1 ✅** |
+| **F** `resolve_path` Conciseness 4→5 | 首句拆句 | 4.7/4.8/**4.9**/4.7 | 4.7 | 4.3 | 4.6 | 0 ❌ |
+| **G** `path_adapter` Contextual 4→5 | 补「环境为实时读取」 | 4.7/**4.9**/4.8/4.7 | 4.7 | 4.3 | 4.6 | 0 ❌ |
+| **A** Coherence Naming 4→5 | 统一动宾式（breaking change） | 不变 | 4.7 | **4.5** | 4.6 | 0 ❌ |
+| **C** Coherence Completeness 4→5 | 加只读 `list_dir` | 不变 | 4.7 | **4.5** | 4.6 | 0 ❌ |
+| **B** Tool Count 4→5 | 加第 5 个工具（同为 4.7） | 4.7/4.8/4.8/4.7/4.7 | 4.7 | **4.5** | 4.6 | 0 ❌ |
+| **H** Parameter 全 4→5 | 改 schema（零参数工具不可达） | 5.0/5.0/5.0/5.0 | **5.0** | 4.3 | 4.8 | 不可达 |
 
-| 杠杆 | 具体改动 | Q | C | 总分 | 相对 4.1 |
-|---|---|---|---|---|---|
-| **A** Naming Consistency 3→4 | 统一动宾式命名（纯描述层，**零代码**） | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
-| **B** `resolve_path` Parameter 3→4 | 补 `$PREFIX/bin`、`/sdcard/Download` 等格式示例 | **4.4** | 3.5 | **4.1** | **0 ❌** |
-| **C** Completeness 3→4 | 加只读 `list_dir`（消除 "dead end for action"） | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
-| **D** Tool Count 4→5 | 加第 5 个工具 | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
-| **E** Disambiguation 4→5 | 把兄弟边界写进描述首句 | 4.3 | **3.8** | **4.2** | **+0.1 ✅** |
+**F / G 为什么明明抬了单项却不涨分**：单项 4.8→4.9 让 `Σtdqs` 从 190 到 191、`mean` 从 47.5 到 47.75，
+但 `Q = round1(6×191 + 4×4×47, 400) = 1898/400 = 4.745 → 4.7`，**差 0.005 进不了 4.8**。
+而 `C` 不动，`7×47 + 3×43 = 458/100 = 4.58 → 4.6`。**「多补几项总会涨」在这里不成立。**
+**A / C / B 为什么也不涨**：三者都只动 `C` 一维，`C` 停在 4.5，
+`7×47 + 3×45 = 464/100 = 4.64 → 4.6`，仍在档内。**要动 C 就必须一次动两维（到 4.8）。**
+### 10.3 组合阶梯：到 4.7 / 4.8 / 4.9 的最短路径
+| 组合 | Q | C | 总分 | 备注 |
+|---|---|---|---|---|
+| **D**（或 **E**） | 4.8 | 4.3 | **4.7** | 最便宜的单步 |
+| **A + C** | 4.7 | 4.8 | **4.7** | 另一条独立路径，成本高 |
+| **D + E** | 4.8 | 4.3 | **4.7** | **饱和**：第二句 Behavior 白写 |
+| **D + E + A** | 4.8 | 4.5 | **4.7** | C 只到 4.5，仍不够 |
+| **D + A + C** | 4.8 | 4.8 | **4.8** | **推荐**：到 4.8 的最短路径 |
+| **D + E + A + C** | 4.8 | 4.8 | **4.8** | 与 D+A+C 同分，E 多余 |
+| **D + E + F + G**（四工具全 4.9） | 4.9 | 4.3 | **4.7** | Q 拉满但 C 拖后腿 |
+| **D + E + F + G + A** | 4.9 | 4.5 | **4.8** | C 仍只到 4.5，靠 Q 撑 |
+| **D + E + F + G + A + C** | 4.9 | 4.8 | **4.9** | 到 4.9 需五处全动 |
+| **D + E + A + C + B** | 4.8 | 5.0 | **4.9** | 用第 5 工具补 C，但多一个工具面 |
 
-**这张表推翻了「补 `resolve_path` 参数示例最划算」的直觉**：B 把 Q 从 4.3 抬到 4.4（`resolve_path` 单项 4.4→4.5），但因为 C 仍卡在 3.5，
-`(7×44 + 3×35)/100 = 413/100 = 4.13 → 4.1`，**一分没涨**。
-根因有二：一是 `min(tdqs)` 仍是 43（`server_health`），60/40 口径下 Q 的增益被最小值项稀释；二是 C 不动就过不了 4.15 的 half-up 门槛。
-
-### 10.3 组合阶梯：到 4.2 / 4.3 / 4.4 的最短路径
-
-| 组合 | Q | C | 总分 |
-|---|---|---|---|
-| A + B | 4.4 | 3.8 | **4.2** |
-| A + B + C | 4.4 | 4.0 | **4.3** |
-| A + B + C + D | 4.4 | 4.3 | **4.4** |
-| A + B + C + D + E | 4.4 | 4.5 | **4.4**（饱和） |
-
-- **到 4.2 有四条独立路径**（A / C / D / E 任一即可），其中 A 最便宜：只改描述与命名，不动一行逻辑。
-- **到 4.3 必须组合**：`Q` 得进到 4.4（靠 B），`C` 得进到 4.0（A + C）。
-- **到 4.4 要 A+B+C+D**：除 Disambiguation 外四维全提，且必须真的加工具（Tool Count 只能靠加工具涨）。
-- **E 在 4.4 之后是白送的**：A+B+C+D 已到 4.4，再补 Disambiguation 到 5 仍停在 4.4（`(7×44+3×45)/100 = 443/100 = 4.43 → 4.4`），说明 4.4 之后 C 已不是瓶颈，Q 才是。
-
+- **到 4.7 有两条独立路径**（`D`/`E` 任一，或 `A+C`），前者只改一句话，后者要动命名或加工具。
+- **`D + E` 是饱和的**：`Q` 到 4.8 后第二句 Behavior 不再加分，**先做一条即可**。
+- **到 4.8 必须双轨**：`Q` 与 `C` 同时进位。`D + A + C` 比 `D+E+F+G+A` 划算得多（三处 vs 五处）。
+- **到 4.9 只有两条路**：`Q=4.9` + `C=4.8`（五处改动），或 `Q=4.8` + `C=5.0`（四维全满 + 加工具）。
 ### 10.4 天花板
+| 情形 | 单工具上限 | 计算 | C=4.3 时总分 | C=5.0 时总分 |
+|---|---|---|---|---|
+| Parameter Semantics 停在 **3** | **4.7** | `[5,5,5,3,5,5]` = 470/100 → 4.70 → 4.7 | 4.6 | 4.8 |
+| Parameter Semantics 停在 **4**（**当前四工具均如此**） | **4.9** | `[5,5,5,4,5,5]` = 485/100 → 4.85 → 4.9 | 4.7 | 4.9 |
+| Parameter Semantics 到 **5** | **5.0** | `[5,5,5,5,5,5]` = 500/100 → 5.0 | 4.8 | 5.0 |
 
-| 情形 | 单工具上限 | 计算 |
-|---|---|---|
-| Parameter Semantics 停在 **3** | **4.7** | `[5,5,5,3,5,5]` = 470/100 → 4.7 |
-| Parameter Semantics 停在 **4** | **4.9** | `[5,5,5,4,5,5]` = 490/100 → 4.9（当前四工具均受此限） |
-| Parameter Semantics 到 **5** | **5.0** | 只有 schema 本身能拿满，光写描述拿不到 5 |
+> 注：`[5,5,5,3,5,5]` 的权重和为 `20×5 + 10×5 + 10×5 + 15×3 + 25×5 + 20×5 = 470`，即 **4.70 → 4.7**（上一版此格计算正确，但把 param=4 行误写成 `490`，正确值是 `485`，已修正）。
 
-**结论**：本仓库四个工具的 Parameter Semantics 分别是 4 / 4 / 3 / 4，因此**单工具天花板 4.9，`resolve_path` 的天花板是 4.7**。
-即使把其余五个维度全部写满，`resolve_path` 也到不了 5.0 —— 这是 schema 决定的硬顶，不是文案问题。
+**结论**：本仓库四个工具的 Parameter Semantics **均为 4**（三个零参数工具基线 4，`resolve_path` 因 schema 覆盖 100% 基线 3 但描述补足语义后判 4），
+因此**单工具天花板统一是 4.9，不是 4.7** —— 上一版「`resolve_path` 天花板 4.7」的结论已失效。
+即使把其余五个维度全部写满，也到不了 5.0：**这是 schema 决定的硬顶，不是文案问题。**
 四工具全拉满（param=4）时 `Q=4.9`、`C=5.0`、总分 **4.9**，即**本仓库在不改 schema 前提下的绝对上限**。
-
+（`7×49 + 3×50 = 343 + 150 = 493/100 = 4.93 → 4.9`；**5.0 需要 `Q=5.0` 与 `C=5.0` 同时成立，而 `Q=5.0` 要求四个工具全部 param=5，不可达。**）
 ### 10.5 三条可直接引用的判断
-
-1. **4.1 不是天花板，4.9 才是**；但从 **4.1 到 4.2 的成本几乎为零**（改命名即可），从 4.4 往上才需要动代码。
-2. **单改描述涨不动分**：B 实验证明「只补 `resolve_path` 参数示例」在 C 不变时**一分不涨**，必须先动 C。
-3. **C 是 4.1→4.2 的唯一钥匙**：Q 已经 4.3，C 只差 0.3；而 C 的四个维度里三个都能靠「加一句路由语 / 加一个只读工具」解决，不需要改 schema。
+1. **4.6 不是天花板，4.9 才是**；但从 **4.6 到 4.7 的成本几乎为零**（补一句 Behavior 描述），
+   从 4.7 到 4.8 才需要动命名/工具面，从 4.8 到 4.9 需要五处同时落地。
+2. **单改一个不痛不痒的维度涨不动分**：F / G 把单项抬了 0.1、A / C / B 把 C 抬了 0.2，
+   **全部停在 4.6**。原因是 `Q` 卡 half-up（1898/400=4.745）与 `C` 离散（4.5 跨不过 4.64）两个独立的门。
+3. **Q 与 C 是两个独立的门，必须分别过**：`Q` 的门槛是「`Σtdqs` 进到 192 且 min 不降」，
+   `C` 的门槛是「四维和至少 +2」。**任何一个门没过，另一个门涨了也不进档** ——
+   这正是 10.2 里七条单杆路径有六条无效的根本原因。
 
 ---
 
@@ -639,3 +677,5 @@ children, memory, phantom_process}.
 | 2026-10-25 | — | 抓取 `tdqs.dev/spec` 原文，发现官方明确把 "always call this first" 列为 enforce-an-ordering 反模式；改写 `resolve_path` 与 `path_adapter` 三处时序指令句，改为「问题分工」表述，第九章新增措辞红线核查小节 |
 | 2026-10-25 | — | 合并两版文档：保留官方整数原语口径（弃用旧 70:30 反解写法），补回 `1.1.3` 自增证据（3.6） |
 | 2026-10-25 | — | 新增 3.7「抓取源定论」：四段描述归一化 4/4 + README 标记矩阵 + 版本号 + 时间线，四证锁定快照对应 GitHub `46cbb5e`，非 PyPI 包；记录提取正则 `class` 在 `id` 前的坑 |
+| 2026-10-25 | — | **重抓生效**：16:55 手动触发 `Repository syncs`，`observedAt` / `scoredAt` 推进，TDQS 由 **4.1 → 4.6**；四工具 4.7 / 4.8 / 4.8 / 4.7，24 个维度中 16 个 5 分、8 个 4 分，Coherence 四维 5 / 4 / 4 / 4。同步更新 1.x 摘要、2.1 表、3.7 影响段与 README 徽标 |
+| 2026-10-25 | — | **第四、十章按新基线全量重写**：确立 `C` 离散只取 4.3 / 4.5 / 4.8 / 5.0（4.6 / 4.7 不可达）、`D` 或 `E` 单杆即可 4.6 → 4.7、四工具 param 均为 4 故统一顶 **4.9**（绝对上限 4.93）、5.0 需 schema 变更故不可达；10.4 权重和修正为 param=3 → 470/100、param=4 → 485/100 |
